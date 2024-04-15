@@ -290,19 +290,182 @@ WHERE deptno = 20
 -- 그래서 외래키의 경우 외래키를 제공하는 참조테이블과 외래키를 사용하는 테이블의 관계는 일대다(1:N)관계.
 -- 
 -- 참조무결성 규칙이란? 참조하는 테이블에 없는 데이터를 사용하는 것. 예를 들어, 참조테이블에 10,20,30만 있다면 40은 쓰지 못한다는 것.
--- 참조무결성강화조치를 취한다.
+-- 참조무결성강화조치
 -- 
+
+SELECT deptno, loc_code
+FROM dept
+WHERE deptno = 20
+;
+
+-- 위에서 얻어진 loc_code 값이 2번이라는 것을 확인
+-- 이를 이용하여 아래와 같은 SQL문장을 다시 수행
+SELECT *
+FROM locations
+WHERE loc_Code = 2;
+
+-- 위는 두 번의 걸쳐 DB를 수행했으므로 시간적으로 유익하지 못 한 결과로 판단된다.
+-- 이런 점을 해결하기 위해 서브쿼리를 학습할 것이다.
+
+-- SUBQUERY
+--    특정 SQL문장 안에 또 다른 SQL문장이 포함된 것
+
+-- [장점] DB에 여러 번 접속해야하는 상황을 한번에 처리가 가능하게 해준다.
+-- 		 한마디로 DB접속되는 횟수를 줄이고, 속도를 증가시킨다.
+
+-- 	  - 서브쿼리를 사용할 수 있는 곳
+-- 		* WHERE, HAVING
+-- 		* INSERT구문의 INTO
+-- 		* UPDATE구문의 SET 절
+-- 		* SELECT나 DELETE 구문의 FROM
+
+-- 	  예문) emp테이블에서 사원 이름이 'SMITH'이고, 직종이 'CLERK'인  
+-- 		   사원의 급여보다 더 많이 받는 사원들의 정보를
+--         사번, 이름, 직종, 급여 순으로 출력해보자!
+
+--  [풀이]
+--  1) 먼저 사원의 이름이 'SMITH'이고 직종이 'CLERK'인 사원의 급여를 알아내야 한다.
+SELECT sal
+FROM emp
+WHERE UPPER(ename) = 'ALLEN' AND UPPER(job) = 'SALESMAN'
+;
+
+-- 2) 1)의 결과를 가지고 조건으로 건 다음의 문장을 만든다.
+SELECT empno, ename, job, sal
+FROM emp
+WHERE sal > 1600;
+
+-- 위의 1)과 2)를 각각 한번씩 두번을 DB에 접속한 경우다.
+-- 이것을 서브쿼리를 활용하여 수행하면 1번에 끝난다.
+
+SELECT empno, ename, job, sal
+FROM emp
+WHERE sal >	(
+			 SELECT sal
+			 FROM emp
+			 WHERE UPPER(ename) = 'ALLEN' AND UPPER(job) = 'SALESMAN'
+);
+
+-- 문제) emp테이블에서 7521번 사원의 직종과 같고, 7844번 사원의 급여보다 많이 받는 
+-- 		사원들의 정보를 사번, 이름,직종, 급여, 입사일 순으로 출력하라.
+
+SELECT empno, ename, job, sal, hiredate
+FROM emp
+WHERE job = (SELECT job
+			 FROM emp
+			 WHERE empno = '7521') 
+	  AND
+	  sal > (SELECT sal
+			 FROM emp
+			 WHERE empno = '7844')
+;
+
+-- 1) 사번이 7521번인 사원의 직종 검색
+SELECT job
+FROM emp
+WHERE empno = 7521
+;
+
+-- 2) 사번이 7844번인 사원의 급여 검색
+SELECT sal
+FROM emp
+WHERE empno = 7844
+;
+
+-- 위의 결과를 조건으로 하는 문장
+SELECT empno, ename, job, sal, hiredate
+FROM emp
+WHERE sal > (SELECT sal
+			 FROM emp
+             WHERE empno = 7844)
+AND job = (SELECT job
+		   FROM emp
+           WHERE empno = 7521)
+;
+
+-- 문제) emp테이블에서 급여가 3000이상인 사원들 중
+-- 입사일이 1982년 이전에 입사한 사원들의 정보를
+-- 사번, 이름, 급여, 입사일 순으로 출력하라
+SELECT empno, ename, sal, hiredate
+FROM emp
+WHERE empno IN (SELECT empno
+				FROM emp
+                WHERE sal >= 3000)
+	  AND
+      year(hiredate) < '1982'
+;
+
+SELECT empno, ename, sal, hiredate
+FROM (SELECT *
+	  FROM emp
+      WHERE sal >= 3000) as sal3000
+WHERE year(hiredate) < '1982'
+;
+
+SELECT empno, ename, sal, hiredate -- 가장 나중에 수행된다.
+FROM emp -- 가장 먼저 수행된다.
+WHERE hiredate < '1982-01-01'
+	AND sal >= 3000 -- 그 다음 조건이 수행된다.
+;
+-- 위는 emp테이블 전체를 대상으로 검색을 수행한다.
+-- 하지만 아래는 그렇지 않다.
+SELECT a.empno, a.ename, a.sal, a.hiredate
+FROM (SELECT *
+	  FROM emp
+      WHERE sal >= 3000) as a
+WHERE year(a.hiredate) < '1982'
+;
+
+SELECT a.empno, a.ename, a.job, a.sal, a.hiredate
+FROM 	(SELECT *
+		 FROM emp
+		 WHERE sal > (SELECT sal
+					  FROM emp
+					  WHERE empno = 7844
+					 )
+		) as a
+WHERE a.job = (SELECT job
+		   FROM emp
+           WHERE empno = 7521)
+;
+
+-- 예) 급여가 3000이상인 사원들의 부서코드와 부서명을 출력하라.
+
+-- 먼저 급여가 3000이상인 사원들의 부서코드 알아내기
+SELECT deptno
+FROM emp
+WHERE sal >= 3000;
+
+-- 앞서 구한 10, 20번을 가지고 dept테이블에서 
+-- 조건으로 사용하여 SQL문장을 완성하라.
+SELECT deptno, dname
+FROM dept
+WHERE deptno IN (10,20)
+;
+
+-- 서브쿼리 활용 예문
+SELECT deptno, dname
+FROM dept
+WHERE deptno IN (SELECT distinct deptno
+				 FROM emp
+                 WHERE sal >= 3000)
+;
+
+
+
+-- 조인(JOIN)
+--  데이터베이스의 테이블들 간 결합을 의미한다.
+--  물리적 조인 : 기본키와 외래키를 통해서 테이블들을 결합하는 것 
 -- 
--- 
--- 
--- 
--- 
--- 
--- 
--- 
--- 
--- 
--- 
+
+SELECT distinct dept.deptno, dname -- distnct: 결과에서 중복을 제거할 수 있는 방법
+FROM emp, dept
+WHERE sal >= 3000 and emp.deptno = dept.deptno
+;
+
+
+
+
 -- 
 -- 
 -- 
