@@ -106,16 +106,59 @@ SELECT empno, ename, job, hiredate, now(), period_diff((year(now())*100) + month
 FROM emp
 ;
 
--- 
--- 
--- 
--- 
--- 
--- 
--- 
--- 
--- 
--- 
+-- date_format(날짜, 형식)
+--   : 형식은 정해지는 것에 따라 날짜 또는 시간을 출력한다.
+
+--   [형식] 
+-- 		'%m' : 월 이름
+-- 		'%w' : 요일 명
+-- 		'%d' : 일 (며칠)
+-- 		'%Y' : 연도 (4자리)
+-- 		'%y' : 연도 (2자리)
+-- 		'%H' : 시 (24시 형식)
+-- 		'%h' : 시 (12시 형식)
+-- 		'%i' : 분 (0~59분)
+-- 		'%s' : 초 (0~59초)
+
+SELECT now(), date_format(now(),'%Y/%m/%d') as c_date, date_format(now(),'%H:%i:%s') as c_time
+;
+
+SELECT now(), date_format(now(),'%Y/%m/%d') as now, date_format(now(),'%y%m') as now2, date_format(hiredate,'%y%m') as hiredate
+FROM emp
+;
+
+-- 문제) emp테이블에서 각 사원들의 근무 월수를 알고자 한다.
+--      사원들의 정보들 중 사번, 이름, 입사일, 근무월수 순으로
+-- 		출력하자. 단, date_format을 사용하여 결과를 얻자.
+SELECT empno, ename, hiredate, date_format(now(),'%Y-%m-%d') as today, period_diff(date_format(now(),'%y%m'),date_format(hiredate,'%y%m')) as workmonth
+FROM emp
+;
+
+
+
+-- 자료형과 데이터 형변환
+--   - 자료형
+--     * VARCHAR 또는 CHAR : 문자열 
+--     * TEXT, MIDIUMTEXT, LONGTEXT : 문자열
+--     * INT : 숫자
+--     * UNSIGNED : 양수
+--     * SIGNED : 양수 + 음수
+--     * DECIMAL : 고정소수섬
+--     * FLOAT, DOUBLE : 부동소수점
+--     * DATETIME, TIMESTAMP : 날짜 및 시간
+--     * INT : 숫자
+
+
+--   - 암시적 형변환
+--  	* 날짜 자료형의 값들은 자동으로 문자열로 변환
+-- 		* '1200'과 같은 숫자가 문자열로 된 자원들은 숫자로 자동으로 변환됨
+-- 		* 1200과 같은 숫자가 문자열로 자동 변환됨
+
+--   - 명시적 형변환
+-- 		- SQL문장 내에서 변환함수를 사용하여 특정 자원을 원하는 자료형으로 변환
+-- 		예) * DATE_FORMAT 함수를 이용한 경우
+SELECT CAST('100' as UNSIGNED) as num
+;
 -- 
 -- 
 -- 
