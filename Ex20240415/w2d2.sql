@@ -463,6 +463,15 @@ FROM emp, dept
 WHERE sal >= 3000 and emp.deptno = dept.deptno
 ;
 
+SELECT empno, ename, hiredate, period_differ(date_format(now(),'%Y%m'),date_format(hiredate,'%Y%m')) as workmonths
+FROM emp
+;
+
+
+
+
+
+
 
 
 
