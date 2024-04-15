@@ -1,0 +1,10 @@
+CREATE TABLE `my_db`.`locations` (
+  `loc_code` INT NOT NULL AUTO_INCREMENT,
+  `city` VARCHAR(20) NULL,
+  PRIMARY KEY (`loc_code`));
+
+
+INSERT INTO `my_db`.`locations` (`city`) VALUES ('NEW YORK');
+INSERT INTO `my_db`.`locations` (`city`) VALUES ('DALLAS');
+INSERT INTO `my_db`.`locations` (`city`) VALUES ('CHICAGO');
+INSERT INTO `my_db`.`locations` (`city`) VALUES ('BOSTON');
