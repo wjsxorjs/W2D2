@@ -159,23 +159,123 @@ FROM emp
 -- 		예) * DATE_FORMAT 함수를 이용한 경우
 SELECT CAST('100' as UNSIGNED) as num
 ;
--- 
--- 
--- 
--- 
--- 
--- 
 
 
 
+-- 데이터 그룹화
+--  지금까지는 emp테이블 자체가 하나의 그룹이었고
+--  이제는 emp테이블에서 소그룹을 만들어 결과를 소그룹별로 얻고자 할 때
+--  그룹생성법을 알아야 가능하다.
+
+-- 예) 각 부서별 급여의 평균과 총액을 구하라
+-- 위와 같은 특정 값으로 자원들을 묶어서 그룹화 하여 처리할 때 GROUP BY 절을 사용한다.
+
+SELECT deptno, COUNT(*), SUM(sal), ROUND(AVG(sal),-2)
+FROM emp
+GROUP BY deptno
+ORDER BY deptno
+;
+
+SELECT deptno, COUNT(*), MAX(sal), MIN(sal)
+FROM emp
+GROUP BY deptno
+;
+
+
+-- 문제) 직종별 급여의 합과 평균을 구하시오.
+SELECT job, COUNT(*), FLOOR(SUM(sal)), FLOOR(AVG(sal))
+FROM emp
+GROUP BY job
+ORDER BY 2 ASC, 4 DESC
+;
+
+-- 문제) emp테이블에서 각 부서별 보너스(comm)의 합, 평균, 인원수를 출력
+SELECT deptno, SUM(IFNULL(comm,0)), AVG(IFNULL(comm,0)), COUNT(*)
+FROM emp
+GROUP BY deptno
+;
+
+-- NULL값을 다른 값으로 대체할 때는 IFNULL사용 < Oracle은 NVL함수 사용
+-- 만약! 특정 부서의 인원들 중에서 3명이 보너스를 받지 못하여 보너스 컬럼에 NULL이 있었다면
+-- 평균을 구할 때는 그 3명은 평균을 구하는 연산에서 제외된다. 그렇지 않고 전체 인원으로 평균을 구해야한다면 
+-- IFNULL로 NULL값을 0으로 대체하여 연산에 참여할 수 있도록 할 수 있다.
 
 
 
+-- 예문) emp테이블에서 연봉을 계산하는 SELECT문장을 기술해보자. (급여 * 보너스)
+
+SELECT *, sal*IFNULL(comm,0)
+FROM emp
+;
+
+-- 예문) 분석가들의 급여 평균을 구하시오.
+
+SELECT AVG(sal)
+FROM emp
+WHERE job = 'ANALYST'
+;
+
+SELECT AVG(sal)
+FROM emp
+GROUP BY job
+HAVING job = 'ANALYST'
+;
+
+SELECT AVG(sal)
+FROM emp
+WHERE job = 'ANALYST'
+GROUP BY job
+;
+
+SELECT job, SUM(sal), AVG(sal), count(*)
+FROM emp
+GROUP BY job
+;
 
 
+-- 예문) emp테이블에서 직종이 'CLERK' 또는 'SALESMAN'인 사원들 중 최대급여를 구하는 SELECT문은?
+SELECT MAX(sal)
+FROM emp
+WHERE job IN ('CLERK','SALESMAN') -- WHERE job = 'CLERK' OR job = 'SALESMAN'
+;
 
+-- 예문) emp테이블에서 20부서의 최소급여를 출력하는 SELECT문은?
+SELECT MIN(sal)
+FROM emp
+WHERE deptno = 20
+;
+
+-- 예문) emp테이블에서 각 부서별 인원수를 구하는 SELECT문은?
+SELECT deptno, COUNT(*)
+FROM emp
+GROUP BY deptno
+ORDER BY deptno
+;
+
+-- 예문) emp테이블에서 각 부서별 인원수를 구하는 SELECT문은?
+--    단, 출력은 5명 이상인 부서만 출력해야한다.
+SELECT deptno, COUNT(*) as empCnt
+FROM emp
+GROUP BY deptno
+HAVING empCnt >= 5
+ORDER BY deptno
+;
+-- 조건식에 그룹함수가 들어가있으면 HAVING절에 작성해야한다.
+-- HAVING절의 위치는 GROUP BY 뒤에 작성해야한다.
 
 
 
 
 -- ====================| 2024.04.15 PM |=========================
+
+-- 
+-- 
+-- 
+-- 
+-- 
+-- 
+-- 
+-- 
+-- 
+-- 
+-- 
